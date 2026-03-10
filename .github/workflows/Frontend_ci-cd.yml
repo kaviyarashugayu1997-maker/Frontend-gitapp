@@ -1,0 +1,97 @@
+name: Frontend deployment to s3 and cloudfront
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  S3_BUCKET_NAME: "amazon-s3-gitfrontend"
+  CLOUDFRONT_DIST_ID: "E2VGAL1LNAYK6L"
+  AWS_REGION: "eu-north-1"
+
+jobs:
+  deploy:
+      runs-on: ubuntu-latest
+
+      steps:
+          - name: Checkout Code
+            uses: actions/checkout@v4 
+
+          - name: Check Node & NPM 
+              run: |
+                node -v
+                npm -v 
+                
+
+          - name: Setup Node.js
+            uses: actions/setup-node@v4
+            with:
+               node-version: '20'
+
+          - name: Install and Build
+             run: |
+               npm install
+               npm run build 
+
+          - name: Verify Build Output
+             run: |
+               ls -la ./dist 
+
+          - name: Configure AWS credentials
+            uses: aws-actions/configure-aws-credentials@v4
+            with:
+              aws-access-key-id: {{ secrets.AWS_ACCESS_KEY_ID }}
+              aws-secret-access-key: {{ secrets.AWS_SECRET_ACCESS_KEY }}
+              aws-region: ${{ env.AWS_REGION }} 
+
+          - name: Deploy to S3
+             run: |
+               aws s3 sync ./dist s3://${{ env.S3_BUCKET_NAME }} --delete 
+
+          - name: CloudFront Invalidation
+             run: |
+               aws cloudfront create-invalidation \
+               --distribution-id ${{ env.CLOUDFRONT_DIST_ID }} \
+               --paths "/*" 
+
+          - name: Success notification
+             if: success()
+                    run: echo "Frontend deployed successfully!" 
+
+          - name: Failure notification
+             if: failure()
+                    run: echo "Frontend deployment failed. Please check the logs and debug the steps."          
+
+
+
+    
+            
+
+        
+              
+                
+                      
+
+                  
+                          
+                              
+
+                                    
+                                            
+                                                        
+
+                                                                 
+                                                                      
+                                                                                    
+                                                                                          
+
+                                                                                                    
+                                                    
+                                                                                                                                                                                        
+                                                                                                                                                                                                  
+
+                                                                                                                                                                                                                
+                                                                                                                                                                                                                          
+                                                                                                                                                                                                                              
+                                                                                                                                                                                                                                                                                                                                     
